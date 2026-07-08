@@ -19,7 +19,7 @@ app.add_middleware(
 
 DISCORD_CLIENT_ID = "1524526940155941076"
 DISCORD_CLIENT_SECRET = "zGLLZ1xBWZtZvCAPycGXAkz1HgLawPGc"
-DISCORD_REDIRECT_URI = "http://194.62.248.55:30047/auth/discord/callback"
+DISCORD_REDIRECT_URI = "https://free-agents-backend.onrender.com/auth/discord/callback"
 DISCORD_API_URL = "https://discord.com/api/v10"
 JWT_SECRET = "free-agents-secret-key-2026"
 
@@ -146,7 +146,7 @@ async def discord_callback(code: str = Query(...)):
     user_data = users_db[discord_id]
     jwt_token = create_jwt(user_data)
     
-    return RedirectResponse(f"http://176.100.37.91:30064/?token={jwt_token}")
+    return RedirectResponse(f"https://frontend-1m4i.onrender.com/?token={jwt_token}")
 
 @app.get("/auth/user")
 def get_user(authorization: str = ""):
