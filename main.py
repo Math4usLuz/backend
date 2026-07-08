@@ -18,7 +18,7 @@ app.add_middleware(
 )
 
 DISCORD_CLIENT_ID = "1524526940155941076"
-DISCORD_CLIENT_SECRET = "zGLLZ1xBWZtZvCAPycGXAkz1HgLawPGc"
+DISCORD_CLIENT_SECRET = "drzGDReddf-PsUXgfjxt2MJDkiHtem2H"
 DISCORD_REDIRECT_URI = "https://free-agents-backend.onrender.com/auth/discord/callback"
 DISCORD_API_URL = "https://discord.com/api/v10"
 JWT_SECRET = "free-agents-secret-key-2026"
