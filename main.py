@@ -114,7 +114,7 @@ async def discord_callback(code: str = Query(...)):
             headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
     
-       if token_response.status_code != 200:
+    if token_response.status_code != 200:
         error_detail = token_response.json()
         print("ERRO DISCORD:", error_detail)
         raise HTTPException(status_code=400, detail=f"Erro Discord: {error_detail}")
