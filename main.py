@@ -88,9 +88,41 @@ def create_player(data: PlayerCreate):
     players_db.append(new_player)
     return new_player
 
-# ========== NOVO ENDPOINT: AVATAR ROBLOX ==========
+# ========== AVATAR ROBLOX ==========
 @app.get("/roblox/avatar/{username}")
 async def get_roblox_avatar(username: str):
+    async with httpx.AsyncClient() as client:
+        user_res = await client.post(
+            "https://users.roblox.com/v1/usernames/users",
+            json={"usernames": [username]}
+        )
+        user_data = user_res.json()
+
+        if not user_data.get("data") or len(user_data["data"]) == 0:
+            raise HTTPException(status_code=404, detail="Usuário Roblox não encontrado")
+
+        user_id = user_data["data"][0]["id"]
+
+        avatar_res = await client.get(
+            "https://thumbnails.roblox.com/v1/users/avatar-headshot",
+            params={"userIds": user_id, "size": "150x150", "format": "Png"}
+        )
+        avatar_data = avatar_res.json()
+
+        if not avatar_data.get("data") or len(avatar_data["data"]) == 0:
+            raise HTTPException(status_code=404, detail="Avatar não encontrado")
+
+        return {"imageUrl": avatar_data["data"][0]["imageUrl"]}
+
+# ========== VERIFICAR BIO ROBLOX ==========
+@app.post("/auth/roblox/verify")
+async def verify_roblox_bio(data: dict):
+    username = data.get("username")
+    code = data.get("code")
+
+    if not username or not code:
+        raise HTTPException(status_code=400, detail="Username e código são obrigatórios")
+
     async with httpx.AsyncClient() as client:
         # 1. username -> userId
         user_res = await client.post(
@@ -104,18 +136,31 @@ async def get_roblox_avatar(username: str):
 
         user_id = user_data["data"][0]["id"]
 
-        # 2. userId -> avatar
-        avatar_res = await client.get(
-            "https://thumbnails.roblox.com/v1/users/avatar-headshot",
-            params={"userIds": user_id, "size": "150x150", "format": "Png"}
+        # 2. userId -> perfil (contém a Bio)
+        profile_res = await client.get(
+            f"https://users.roblox.com/v1/users/{user_id}"
         )
-        avatar_data = avatar_res.json()
+        profile_data = profile_res.json()
 
-        if not avatar_data.get("data") or len(avatar_data["data"]) == 0:
-            raise HTTPException(status_code=404, detail="Avatar não encontrado")
+        bio = profile_data.get("description", "")
 
-        return {"imageUrl": avatar_data["data"][0]["imageUrl"]}
+        # 3. Verifica se o código está na Bio
+        if code.upper() in bio.upper():
+            return {
+                "verified": True,
+                "message": "Código encontrado na Bio! Conta verificada.",
+                "username": username,
+                "user_id": user_id
+            }
+        else:
+            return {
+                "verified": False,
+                "message": "Código NÃO encontrado na Bio. Verifique se colou corretamente.",
+                "username": username,
+                "user_id": user_id
+            }
 
+# ========== LOGIN DISCORD ==========
 @app.get("/auth/discord/login")
 def discord_login():
     auth_url = (
