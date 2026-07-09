@@ -88,6 +88,34 @@ def create_player(data: PlayerCreate):
     players_db.append(new_player)
     return new_player
 
+# ========== NOVO ENDPOINT: AVATAR ROBLOX ==========
+@app.get("/roblox/avatar/{username}")
+async def get_roblox_avatar(username: str):
+    async with httpx.AsyncClient() as client:
+        # 1. username -> userId
+        user_res = await client.post(
+            "https://users.roblox.com/v1/usernames/users",
+            json={"usernames": [username]}
+        )
+        user_data = user_res.json()
+
+        if not user_data.get("data") or len(user_data["data"]) == 0:
+            raise HTTPException(status_code=404, detail="Usuário Roblox não encontrado")
+
+        user_id = user_data["data"][0]["id"]
+
+        # 2. userId -> avatar
+        avatar_res = await client.get(
+            "https://thumbnails.roblox.com/v1/users/avatar-headshot",
+            params={"userIds": user_id, "size": "150x150", "format": "Png"}
+        )
+        avatar_data = avatar_res.json()
+
+        if not avatar_data.get("data") or len(avatar_data["data"]) == 0:
+            raise HTTPException(status_code=404, detail="Avatar não encontrado")
+
+        return {"imageUrl": avatar_data["data"][0]["imageUrl"]}
+
 @app.get("/auth/discord/login")
 def discord_login():
     auth_url = (
